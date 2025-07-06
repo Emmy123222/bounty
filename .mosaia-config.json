@@ -1,0 +1,54 @@
+{
+  "name": "BountyHunter AI+",
+  "description": "Autonomous Web3 bounty-hunting agent that scrapes real bounty platforms and executes on-chain claims",
+  "version": "1.0.0",
+  "type": "agent",
+  "category": "web3",
+  "tags": ["web3", "bounty", "defi", "automation", "blockchain"],
+  "author": "BountyHunter AI Team",
+  "license": "MIT",
+  "repository": "https://github.com/yourusername/bountyhunter-ai",
+  "homepage": "https://bountyhunter-ai.vercel.app",
+  "agent": {
+    "entry": "agent/index.js",
+    "runtime": "node",
+    "schedule": "0 */6 * * *",
+    "timeout": 300000,
+    "memory": 512,
+    "environment": {
+      "NODE_ENV": "production"
+    }
+  },
+  "capabilities": [
+    "web-scraping",
+    "blockchain-transactions",
+    "data-analysis",
+    "automated-claiming",
+    "real-time-monitoring"
+  ],
+  "integrations": {
+    "supabase": {
+      "required": true,
+      "description": "Database and backend services"
+    },
+    "exa": {
+      "required": true,
+      "description": "Advanced web scraping for bounty platforms"
+    },
+    "ethers": {
+      "required": true,
+      "description": "Ethereum blockchain interactions"
+    },
+    "solana": {
+      "required": false,
+      "description": "Solana blockchain interactions"
+    }
+  },
+  "permissions": [
+    "network:outbound",
+    "storage:read",
+    "storage:write",
+    "blockchain:read",
+    "blockchain:write"
+  ]
+}
