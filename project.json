@@ -1,0 +1,14 @@
+{
+  "name": "Your Project Name",
+  "tagline": "One-liner summary of your project",
+  "description": "What it does, how it works, and the tech used.",
+  "team": [
+    {
+      "name": "Your Name",
+      "email": "youremail@example.com"
+    }
+  ],
+  "demo_url": "https://example.com/demo",
+  "video_url": "https://youtube.com/watch?v=your-demo-video",
+  "technologies": ["React", "Ethers.js", "Polygon"]
+}
