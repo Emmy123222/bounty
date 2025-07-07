@@ -10,13 +10,15 @@ import {
   Bot,
   Settings,
   Eye,
-  AlertCircle
+  AlertCircle,
+  Database
 } from 'lucide-react';
 import BountyCard from './BountyCard';
 import BountyFilters from './BountyFilters';
 import { Bounty } from '../types';
 import { BountyService } from '../services/bountyService';
 import { useAccount } from 'wagmi';
+import { isSupabaseConfigured } from '../config/supabase';
 
 const Dashboard: React.FC = () => {
   const { address } = useAccount();
@@ -52,7 +54,15 @@ const Dashboard: React.FC = () => {
       calculateStats(fetchedBounties);
     } catch (error) {
       console.error('Failed to load bounties:', error);
-      setError('Failed to load bounties. Please check your Supabase configuration.');
+      setError('Failed to load bounties. Using demo data.');
+      // Try to get sample data as fallback
+      try {
+        const sampleBounties = BountyService.getSampleBounties();
+        setBounties(sampleBounties);
+        calculateStats(sampleBounties);
+      } catch (fallbackError) {
+        console.error('Failed to load sample data:', fallbackError);
+      }
     } finally {
       setLoading(false);
     }
@@ -67,7 +77,7 @@ const Dashboard: React.FC = () => {
       calculateStats(freshBounties);
     } catch (error) {
       console.error('Failed to refresh bounties:', error);
-      setError('Failed to refresh bounties. Please check your API configuration.');
+      setError('Failed to refresh bounties. Using existing data.');
     } finally {
       setRefreshing(false);
     }
@@ -167,32 +177,9 @@ const Dashboard: React.FC = () => {
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-cyan-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Loading bounties from Supabase...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-cyan-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto p-6">
-          <AlertCircle size={48} className="text-red-500 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-            Configuration Error
-          </h3>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">
-            {error}
+          <p className="text-gray-600 dark:text-gray-400">
+            {isSupabaseConfigured ? 'Loading bounties from Supabase...' : 'Loading demo bounties...'}
           </p>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            Please check your .env file and ensure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set correctly.
-          </p>
-          <button
-            onClick={loadBounties}
-            className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-          >
-            Retry
-          </button>
         </div>
       </div>
     );
@@ -208,9 +195,15 @@ const Dashboard: React.FC = () => {
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
                 Bounty Dashboard
               </h1>
-              <p className="text-gray-600 dark:text-gray-400 mt-2">
-                Real-time Web3 bounties from Supabase
-              </p>
+              <div className="flex items-center gap-2 mt-2">
+                <Database size={16} className={isSupabaseConfigured ? 'text-green-600' : 'text-orange-600'} />
+                <p className="text-gray-600 dark:text-gray-400">
+                  {isSupabaseConfigured 
+                    ? 'Connected to Supabase database' 
+                    : 'Demo mode - Configure Supabase for full functionality'
+                  }
+                </p>
+              </div>
             </div>
             <div className="flex items-center gap-4">
               <button
@@ -219,7 +212,7 @@ const Dashboard: React.FC = () => {
                 className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border border-gray-200 dark:border-gray-700 shadow-sm"
               >
                 <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
-                {refreshing ? 'Scraping...' : 'Refresh'}
+                {refreshing ? 'Refreshing...' : 'Refresh'}
               </button>
               <div className="flex items-center gap-2">
                 <Bot size={20} className="text-purple-600" />
@@ -239,6 +232,34 @@ const Dashboard: React.FC = () => {
               </div>
             </div>
           </div>
+
+          {/* Configuration Warning */}
+          {!isSupabaseConfigured && (
+            <div className="mb-6 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+              <div className="flex items-center gap-2">
+                <AlertCircle size={20} className="text-orange-600" />
+                <div>
+                  <h3 className="text-sm font-medium text-orange-800">Demo Mode Active</h3>
+                  <p className="text-sm text-orange-700 mt-1">
+                    To use real Supabase data, configure your environment variables in the .env file:
+                    <br />
+                    <code className="bg-orange-100 px-1 rounded">VITE_SUPABASE_URL</code> and{' '}
+                    <code className="bg-orange-100 px-1 rounded">VITE_SUPABASE_ANON_KEY</code>
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Error Message */}
+          {error && (
+            <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <div className="flex items-center gap-2">
+                <AlertCircle size={20} className="text-yellow-600" />
+                <p className="text-sm text-yellow-800">{error}</p>
+              </div>
+            </div>
+          )}
 
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -301,7 +322,7 @@ const Dashboard: React.FC = () => {
             </h3>
             <p className="text-gray-600 dark:text-gray-400">
               {bounties.length === 0 
-                ? 'No bounties in database. Click "Refresh" to scrape new bounties.'
+                ? 'No bounties available. Click "Refresh" to load bounties.'
                 : 'Try adjusting your filters to see more bounties.'
               }
             </p>
